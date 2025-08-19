@@ -707,11 +707,9 @@
     </div>
 
     <script>
-        // Google Sheets Configuration
-        const GOOGLE_SHEETS_CONFIG = {
-            apiKey: 'AIzaSyCSIaBQNXDrIXsz3dN1HJQE2EWdk3SWDIc', // Replace with your API key
-            spreadsheetId: '14FH-Urz7nA3ake1TBNOiB3PPzT6ydR2urdJVAy8DjB0', // Replace with your spreadsheet ID
-            range: 'Sheet1!A:J'
+        // Google Apps Script Configuration
+        const GOOGLE_SCRIPT_CONFIG = {
+            webAppUrl: 'https://script.google.com/macros/s/AKfycbwVDpMSxFseatWMl2e3y2X1-5Fc7neH_DI5rhTlPOUHdi9KOhKAyho29X13VdTjh9wU/exec' // Replace with your Google Apps Script web app URL
         };
 
         // Application state
@@ -738,28 +736,30 @@
             setupEventListeners();
         }
 
-        // Load data from Google Sheets
+        // Load data from Google Apps Script
         async function loadData() {
-            if (!GOOGLE_SHEETS_CONFIG.apiKey || GOOGLE_SHEETS_CONFIG.apiKey === 'YOUR_API_KEY_HERE') {
-                console.log('Google Sheets not configured, using localStorage');
+            if (!GOOGLE_SCRIPT_CONFIG.webAppUrl || GOOGLE_SCRIPT_CONFIG.webAppUrl === 'YOUR_SCRIPT_URL_HERE') {
+                console.log('Google Apps Script not configured, using localStorage');
                 loadFromLocalStorage();
                 return;
             }
 
             try {
-                const response = await fetch(
-                    `https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEETS_CONFIG.spreadsheetId}/values/${GOOGLE_SHEETS_CONFIG.range}?key=${GOOGLE_SHEETS_CONFIG.apiKey}`
-                );
+                const response = await fetch(GOOGLE_SCRIPT_CONFIG.webAppUrl);
                 
                 if (!response.ok) {
-                    throw new Error('Failed to fetch from Google Sheets');
+                    throw new Error('Failed to fetch from Google Apps Script');
                 }
                 
-                const data = await response.json();
-                parseGoogleSheetsData(data.values);
-                console.log('Data loaded from Google Sheets');
+                const result = await response.json();
+                if (result.error) {
+                    throw new Error(result.error);
+                }
+                
+                parseGoogleSheetsData(result.data);
+                console.log('Data loaded from Google Sheets via Apps Script');
             } catch (error) {
-                console.error('Error loading from Google Sheets:', error);
+                console.error('Error loading from Google Apps Script:', error);
                 loadFromLocalStorage();
             }
         }
@@ -779,10 +779,10 @@
                 
                 if (!members.has(memberId)) {
                     members.set(memberId, {
-                        id: parseInt(memberId),
+                        id: parseInt(memberId) || Date.now(),
                         name: memberName,
                         role: role,
-                        allowance: parseInt(allowance),
+                        allowance: parseInt(allowance) || 25,
                         leaves: []
                     });
                 }
@@ -790,7 +790,7 @@
                 // Add leave if all leave data is present
                 if (leaveId && startDate && endDate && leaveType) {
                     members.get(memberId).leaves.push({
-                        id: parseInt(leaveId),
+                        id: parseInt(leaveId) || Date.now(),
                         startDate,
                         endDate,
                         type: leaveType,
@@ -815,7 +815,7 @@
             }
         }
 
-        // Save data to Google Sheets
+        // Save data to Google Apps Script
         async function saveData() {
             // Always save to localStorage as backup
             try {
@@ -824,21 +824,21 @@
                 console.log('Could not save to localStorage:', error);
             }
 
-            if (!GOOGLE_SHEETS_CONFIG.apiKey || GOOGLE_SHEETS_CONFIG.apiKey === 'YOUR_API_KEY_HERE') {
-                console.log('Google Sheets not configured, data saved to localStorage only');
+            if (!GOOGLE_SCRIPT_CONFIG.webAppUrl || GOOGLE_SCRIPT_CONFIG.webAppUrl === 'YOUR_SCRIPT_URL_HERE') {
+                console.log('Google Apps Script not configured, data saved to localStorage only');
                 return;
             }
 
             try {
-                await saveToGoogleSheets();
-                console.log('Data saved to Google Sheets');
+                await saveToGoogleScript();
+                console.log('Data saved to Google Sheets via Apps Script');
             } catch (error) {
-                console.error('Error saving to Google Sheets:', error);
+                console.error('Error saving to Google Apps Script:', error);
             }
         }
 
-        // Save to Google Sheets
-        async function saveToGoogleSheets() {
+        // Save to Google Apps Script
+        async function saveToGoogleScript() {
             const rows = [['Member ID', 'Member Name', 'Role', 'Allowance', 'Leave ID', 'Start Date', 'End Date', 'Leave Type', 'Notes', 'Recorded At']];
             
             teamData.members.forEach(member => {
@@ -863,21 +863,21 @@
                 }
             });
 
-            const response = await fetch(
-                `https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEETS_CONFIG.spreadsheetId}/values/${GOOGLE_SHEETS_CONFIG.range}?valueInputOption=RAW&key=${GOOGLE_SHEETS_CONFIG.apiKey}`,
-                {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        values: rows
-                    })
-                }
-            );
+            const response = await fetch(GOOGLE_SCRIPT_CONFIG.webAppUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(rows)
+            });
 
             if (!response.ok) {
-                throw new Error('Failed to save to Google Sheets');
+                throw new Error('Failed to save to Google Apps Script');
+            }
+
+            const result = await response.json();
+            if (result.error) {
+                throw new Error(result.error);
             }
         }
 
