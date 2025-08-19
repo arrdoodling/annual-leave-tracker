@@ -709,7 +709,7 @@
     <script>
         // Google Apps Script Configuration
         const GOOGLE_SCRIPT_CONFIG = {
-            webAppUrl: 'https://script.google.com/macros/s/AKfycbwVDpMSxFseatWMl2e3y2X1-5Fc7neH_DI5rhTlPOUHdi9KOhKAyho29X13VdTjh9wU/exec' // Replace with your Google Apps Script web app URL
+            webAppUrl: 'YOUR_SCRIPT_URL_HERE' // Replace with your Google Apps Script web app URL
         };
 
         // Application state
@@ -941,14 +941,34 @@
             document.getElementById('usagePercentage').textContent = `${Math.round(usagePercentage)}% used`;
         }
 
-        // Calculate total leave days for a member
+        // Calculate business days between two dates (excluding weekends)
+        function calculateBusinessDays(startDate, endDate) {
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            
+            // Ensure start is before or equal to end
+            if (start > end) return 0;
+            
+            let businessDays = 0;
+            const currentDate = new Date(start);
+            
+            while (currentDate <= end) {
+                const dayOfWeek = currentDate.getDay();
+                // 0 = Sunday, 6 = Saturday, so exclude these
+                if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+                    businessDays++;
+                }
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+            
+            return businessDays;
+        }
+
+        // Calculate total leave days for a member (business days only)
         function calculateTotalLeave(member) {
             return member.leaves.reduce((total, leave) => {
-                const start = new Date(leave.startDate);
-                const end = new Date(leave.endDate);
-                const diffTime = Math.abs(end - start);
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-                return total + diffDays;
+                const businessDays = calculateBusinessDays(leave.startDate, leave.endDate);
+                return total + businessDays;
             }, 0);
         }
 
@@ -980,9 +1000,7 @@
 
             container.innerHTML = '';
             selectedMember.leaves.forEach(leave => {
-                const start = new Date(leave.startDate);
-                const end = new Date(leave.endDate);
-                const duration = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+                const duration = calculateBusinessDays(leave.startDate, leave.endDate);
                 
                 const leaveElement = document.createElement('div');
                 leaveElement.className = 'leave-entry';
@@ -990,11 +1008,11 @@
                     <div class="leave-info">
                         <div class="leave-type-icon">${getLeaveTypeIcon(leave.type)}</div>
                         <div>
-                            <div class="leave-dates">${formatDate(start)} - ${formatDate(end)}</div>
+                            <div class="leave-dates">${formatDate(new Date(leave.startDate))} - ${formatDate(new Date(leave.endDate))}</div>
                             <div class="leave-notes">${leave.type.charAt(0).toUpperCase() + leave.type.slice(1)} Leave${leave.notes ? ' • ' + leave.notes : ''}</div>
                         </div>
                     </div>
-                    <div class="leave-duration">${duration} day${duration > 1 ? 's' : ''}</div>
+                    <div class="leave-duration">${duration} business day${duration !== 1 ? 's' : ''}</div>
                 `;
                 container.appendChild(leaveElement);
             });
