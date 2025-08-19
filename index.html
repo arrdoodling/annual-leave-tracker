@@ -736,11 +736,10 @@
             setupEventListeners();
         }
 
-        // Load data from Google Apps Script
+        // Load data from Google Apps Script only
         async function loadData() {
             if (!GOOGLE_SCRIPT_CONFIG.webAppUrl || GOOGLE_SCRIPT_CONFIG.webAppUrl === 'YOUR_SCRIPT_URL_HERE') {
-                console.log('Google Apps Script not configured, using localStorage');
-                loadFromLocalStorage();
+                console.log('Google Apps Script not configured');
                 return;
             }
 
@@ -760,7 +759,7 @@
                 console.log('Data loaded from Google Sheets via Apps Script');
             } catch (error) {
                 console.error('Error loading from Google Apps Script:', error);
-                loadFromLocalStorage();
+                alert('Could not load data from Google Sheets. Please check your internet connection.');
             }
         }
 
@@ -815,17 +814,11 @@
             }
         }
 
-        // Save data to Google Apps Script
+        // Save data to Google Apps Script only
         async function saveData() {
-            // Always save to localStorage as backup
-            try {
-                localStorage.setItem('leaveTrackerData', JSON.stringify(teamData));
-            } catch (error) {
-                console.log('Could not save to localStorage:', error);
-            }
-
             if (!GOOGLE_SCRIPT_CONFIG.webAppUrl || GOOGLE_SCRIPT_CONFIG.webAppUrl === 'YOUR_SCRIPT_URL_HERE') {
-                console.log('Google Apps Script not configured, data saved to localStorage only');
+                console.log('Google Apps Script not configured');
+                alert('Cannot save data - Google Sheets not configured');
                 return;
             }
 
@@ -834,6 +827,7 @@
                 console.log('Data saved to Google Sheets via Apps Script');
             } catch (error) {
                 console.error('Error saving to Google Apps Script:', error);
+                alert('Failed to save data to Google Sheets. Please try again.');
             }
         }
 
