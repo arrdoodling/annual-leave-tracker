@@ -850,6 +850,11 @@
             const rows = [['Member ID', 'Member Name', 'Role', 'Allowance', 'Leave ID', 'Start Date', 'End Date', 'Leave Type', 'Notes', 'Recorded At']];
             
             teamData.members.forEach(member => {
+                // Skip saving any member with "Member Name" as the name
+                if (member.name === 'Member Name' || !member.name || member.name.trim() === '') {
+                    return;
+                }
+                
                 if (member.leaves.length === 0) {
                     // Add member row even if no leaves
                     rows.push([member.id, member.name, member.role, member.allowance, '', '', '', '', '', '']);
