@@ -108,6 +108,29 @@
             align-items: center;
             gap: 12px;
             margin-bottom: 20px;
+            position: relative;
+        }
+
+        .add-member-btn {
+            position: absolute;
+            right: 0;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #111827;
+            color: white;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .add-member-btn:hover {
+            background: #1f2937;
+            transform: scale(1.1);
         }
 
         .card-icon {
@@ -260,7 +283,7 @@
 
         .progress-header {
             display: flex;
-            justify-content: between;
+            justify-content: space-between;
             align-items: center;
             margin-bottom: 8px;
         }
@@ -285,9 +308,20 @@
 
         .progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, #10b981, #059669);
             border-radius: 8px;
-            transition: width 0.5s ease;
+            transition: all 0.5s ease;
+        }
+
+        .progress-fill.low {
+            background: linear-gradient(90deg, #10b981, #059669);
+        }
+
+        .progress-fill.medium {
+            background: linear-gradient(90deg, #f59e0b, #d97706);
+        }
+
+        .progress-fill.high {
+            background: linear-gradient(90deg, #ef4444, #dc2626);
         }
 
         .form-section h2 {
@@ -388,28 +422,6 @@
 
         .btn-secondary:hover {
             background: #f3f4f6;
-        }
-
-        .add-person-btn {
-            position: fixed;
-            bottom: 24px;
-            right: 24px;
-            width: 56px;
-            height: 56px;
-            border-radius: 50%;
-            background: #111827;
-            color: white;
-            border: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            transition: all 0.2s ease;
-        }
-
-        .add-person-btn:hover {
-            background: #1f2937;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
         }
 
         .leave-history {
@@ -582,9 +594,20 @@
                     <div class="card-header">
                         <div class="card-icon team-icon">👥</div>
                         <h2>Team Members</h2>
+                        <button class="add-member-btn" onclick="openAddPersonModal()">+</button>
                     </div>
                     <div id="teamMembers">
                         <!-- Team members will be populated here -->
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon history-icon">📋</div>
+                        <h2>Leave History</h2>
+                    </div>
+                    <div class="leave-history" id="leaveHistory">
+                        <!-- Leave entries will be populated here -->
                     </div>
                 </div>
 
@@ -597,23 +620,13 @@
                         <p style="color: #6b7280; margin-bottom: 16px; font-size: 0.9rem;">
                             Check the latest UAE public holidays and observances
                         </p>
-                        <a href="https://www.timeanddate.com/holidays/united-arab-emirates/2025" 
+                        <a href="https://www.timeanddate.com/holidays/uae/" 
                            target="_blank" 
                            rel="noopener noreferrer"
                            class="btn btn-primary"
                            style="display: inline-block; text-decoration: none;">
                             View UAE Holidays
                         </a>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-icon history-icon">📋</div>
-                        <h2>Leave History</h2>
-                    </div>
-                    <div class="leave-history" id="leaveHistory">
-                        <!-- Leave entries will be populated here -->
                     </div>
                 </div>
             </div>
@@ -688,8 +701,6 @@
             </div>
         </main>
     </div>
-
-    <button class="add-person-btn" onclick="openAddPersonModal()">+</button>
 
     <!-- Add Person Modal -->
     <div class="modal" id="addPersonModal">
@@ -959,7 +970,22 @@
             document.getElementById('totalAllowance').textContent = selectedMember.allowance;
             document.getElementById('daysTaken').textContent = totalTaken;
             document.getElementById('daysRemaining').textContent = remaining;
-            document.getElementById('progressFill').style.width = `${Math.min(usagePercentage, 100)}%`;
+            
+            const progressFill = document.getElementById('progressFill');
+            progressFill.style.width = `${Math.min(usagePercentage, 100)}%`;
+            
+            // Remove existing color classes
+            progressFill.classList.remove('low', 'medium', 'high');
+            
+            // Add appropriate color class based on usage percentage
+            if (usagePercentage <= 33) {
+                progressFill.classList.add('low');
+            } else if (usagePercentage <= 67) {
+                progressFill.classList.add('medium');
+            } else {
+                progressFill.classList.add('high');
+            }
+            
             document.getElementById('usagePercentage').textContent = `${Math.round(usagePercentage)}% used`;
         }
 
